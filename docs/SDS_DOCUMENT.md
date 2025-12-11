@@ -1,77 +1,100 @@
 # System Design Specification (SDS)
 
-**Project:** Campus Event Assistant Chatbot
-**Version:** 1.0
+**Project Name:** Campus Event Assistant Chatbot
+**Version:** 2.0
+**Date:** December 11, 2025
+**Author:** Development Team
 
 ---
 
-## 1. Introduction
-This document specifies the architectural design, data structures, and interface definitions for the Campus Event Assistant Chatbot. It serves as a blueprint for the implementation phase.
+## 1. Executive Summary
+The **Campus Event Assistant** is a cross-platform conversational agent designed to centralize event management for educational institutions. This document outlines the architectural blueprint, data structures, component interactions, and interface definitions required to build the system. The system leverages a **MERN-lite stack** (MongoDB, Express, Node.js) with vanilla frontend technologies to ensure lightweight performance and ease of deployment.
 
 ## 2. System Architecture
-The system utilizes a **Client-Server Architecture** decoupled via RESTful APIs.
 
-### 2.1 High-Level Diagram
+### 2.1 Architectural Pattern
+The system follows a **Client-Server Architecture** decoupled via RESTful APIs. This separation of concerns allows the frontend to run independently of the backend logic, facilitating future scalability (e.g., swapping the web frontend for a mobile app).
+
+### 2.2 System Context Diagram (Context Level 0)
+The following diagram illustrates the interaction between the User, the Chatbot System, and external entities.
+
 ```mermaid
 graph LR
-    Client[Web Browser] -- HTTP/JSON --> Server[Node.js Express Server]
-    Server -- Mongoose --> Database[MongoDB Atlas]
-    Server -- Webhooks --> External[Telegram/WhatsApp APIs]
+    User[Student / Admin] -- HTTPS Requests --> System[Event Chatbot System]
+    System -- Query/Update --> DB[(MongoDB Atlas)]
+    System -- Webhooks --> Telegram[Telegram Bot API]
+    System -- Deep Links --> WhatsApp[WhatsApp API]
+    System -- ICS File Gen --> GCal[Google Calendar]
 ```
 
-### 2.2 Components
-1.  **Frontend (Client)**:
-    *   **Technalogies**: HTML5, CSS3, JavaScript (ES6+).
-    *   **Modules**: Chat Widget, Event Dashboard, Auth Forms, Sidebar Navigation.
-    *   **Responsibility**: User interaction, rendering UI, making Async API calls.
+### 2.3 Component Diagram
+1.  **Presentation Layer (Frontend)**
+    *   **Dashboard Module**: Handles the Single Page Application (SPA) routing, view switching (Live/Past Events), and local state management.
+    *   **Chat Interface**: Manages the conversational UI, message history rendering, and typing indicators.
+    *   **Auth Module**: Manages JWT/Session storage in `localStorage` and controls access to the Admin Panel.
 
-2.  **Backend (Server)**:
-    *   **Technologies**: Node.js, Express.js.
-    *   **Modules**: 
-        *   `authController`: Handles Login/Register.
-        *   `eventController`: CRUD operations for Events.
-        *   `botController`: Manages Telegram/WhatsApp webhooks.
-    *   **Responsibility**: Business logic, request processing, database interaction.
+2.  **Logic Layer (Backend API)**
+    *   **Express Server**: The central request handler.
+    *   **Routers**:
+        *   `/api/auth`: Handles specialized login/registration logic.
+        *   `/api/events`: RESTful CRUD endpoints for event data.
+        *   `/api/webhooks`: Endpoint for processing incoming Telegram updates.
+    *   **Controllers**: Contains the business rules (e.g., "Only Admins can delete events").
 
-3.  **Database**:
-    *   **Technology**: MongoDB (NoSQL).
-    *   **Responsibility**: Persistent storage of Users and Events.
+3.  **Data Layer (Persistence)**
+    *   **MongoDB**: a NoSQL database chosen for its flexibility with JSON-like documents.
 
-## 3. Data Design (Schema)
+## 3. Data Dictionary & Schema Design
 
-### 3.1 User Schema
-| Field | Type | Description |
-|-------|------|-------------|
-| `username` | String | Unique identifier |
-| `password` | String | Hashed password |
-| `isAdmin` | Boolean | Privileged access flag |
+### 3.1 User Collection (`users`)
+Stores authentication credentials and privilege levels.
+| Field Name | Data Type | Required | Default | Description |
+|:---|:---|:---|:---|:---|
+| `_id` | ObjectId | Yes | Auto | Unique Primary Key |
+| `username` | String | Yes | - | Unique user identifier |
+| `password` | String | Yes | - | SHA-6 (minimum) hashed string |
+| `isAdmin` | Boolean | No | `false` | Grants access to Admin Panel |
+| `createdAt` | Date | Yes | `now()` | Timestamp of registration |
 
-### 3.2 Event Schema
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | String | Event Name |
-| `date` | String | Event Date |
-| `time` | String | Event Time |
-| `location` | String | Venue |
-| `image` | String | URL to cover image |
-| `reviews` | Array | List of user reviews `{user, comment}` |
-| `registrationLink`| String | WhatsApp/External Link |
+### 3.2 Event Collection (`events`)
+Stores all details regarding campus activities.
+| Field Name | Data Type | Required | Description |
+|:---|:---|:---|:---|
+| `title` | String | Yes | Name of the event |
+| `date` | String | Yes | Human-readable date (e.g., "25 Dec") |
+| `time` | String | Yes | Time of event |
+| `location` | String | Yes | Physical venue or Zoom link |
+| `description`| String | No | Detailed summary |
+| `image` | String | No | URL to Unsplash/hosted image |
+| `reviews` | Array<Object> | No | List of `{user, comment, rating}` |
 
-## 4. Interface Design
+## 4. Interface Specification
 
-### 4.1 API Endpoints
--   `GET /api/events` : Retrieve all events.
--   `POST /api/events` : Create a new event.
--   `POST /api/login` : Authenticate user.
--   `POST /api/register` : Create new user.
+### 4.1 Application Programming Interface (API)
+The backend exposes the following REST endpoints:
 
-### 4.2 User Interface
--   **Dashboard**: A glassmorphic design featuring a sidebar for navigation and a main content area for dynamic views.
--   **Color Palette**: 
-    -   Primary: Indigo (`#6366f1`)
-    -   Background: Dark/Light hybrid (`#f3f4f6` / `#1e1e2d`)
+#### **Authentication**
+*   `POST /api/register`: Validates uniqueness of user and creates record.
+*   `POST /api/login`: Validates credentials and returns User Object + Token.
 
-## 5. Security Design
--   **Authentication**: Session-based auth using LocalStorage on client and memory/DB validation on server.
--   **Data Protection**: SHA-256 hashing for passwords (upgradeable to bcrypt).
--   **Input Validation**: Server-side validation for all API inputs to prevent injection.
+#### **Event Management**
+*   `GET /api/events`: Returns array of all Event objects. Supports query params `?category=social`.
+*   `POST /api/events`: (Admin Only) Creating a new event resource.
+*   `DELETE /api/events/:id`: (Admin Only) Soft or Hard delete of an event.
+*   `POST /api/events/:id/reviews`: Appends a review object to the event's review array.
+
+### 4.2 User Interface (UI) Guidelines
+*   **Design Language**: Glassmorphism.
+    *   **Translucency**: UI cards must use `backdrop-filter: blur(Npx)` to simulate frosted glass.
+    *   **Colors**: Use high-contrast gradients (Indigo/Purple) to convey modernism.
+*   **Responsiveness**: The dashboard must collapse the Sidebar into a "Hamburger Menu" on mobile viewports (<768px).
+
+## 5. Security & Performance
+### 5.1 Security Measures
+1.  **Sanitization**: All inputs are sanitized to prevent NoSQL Injection.
+2.  **CORS Policy**: Restricted to allowed domains in production.
+3.  **Hashed Passwords**: Passwords are never stored in plain text.
+
+### 5.2 Performance Requirements
+1.  **Latency**: API responses must occur within <200ms for standard queries.
+2.  **Availability**: System uptime target is 99.9% via Render.com hosting.

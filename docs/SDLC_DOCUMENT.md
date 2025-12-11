@@ -1,52 +1,67 @@
-# System Development Life Cycle (SDLC) Document
+# System Development Life Cycle (SDLC)
 
 **Project:** Campus Event Assistant Chatbot
 **Methodology:** Agile / Iterative
+**Date:** December 11, 2025
 
 ---
 
-## 1. Phase 1: Requirement Analysis
-**Goal**: Understand the problem and define scope.
--   **Activities**:
-    -   Analyzed the problem of "missed campus events".
-    -   Identified key stakeholders: Students, Event Organizers.
-    -   Defined core requirements: Chat interface, Dashboard, User Auth, Integrations.
--   **Outcome**: Requirement Specification Document (see Project Report).
+## 1. Introduction
+The System Development Life Cycle (SDLC) defines the framework used to structure, plan, and control the process of developing the Campus Event Assistant. This project adheres to the **Agile Methodology**, focusing on iterative development, flexibility, and customer feedback.
 
-## 2. Phase 2: System Design
-**Goal**: Blueprint the technical solution.
--   **Activities**:
-    -   Selected Tech Stack: MERN (MongoDB, Express, Node) sans React (Vanilla JS chose for simplicity).
-    -   Designed Database Schema (Users, Events).
-    -   Created UI Mockups (Glassmorphism concept).
--   **Outcome**: System Design Specification (SDS).
+## Phase 1: Requirement Analysis & Planning
+**Objective:** To clearly define the problem scope and feasibility.
+*   **Inputs:** Initial problem statement ("Students missing events"), Stakeholder interviews.
+*   **Activities:**
+    *   Identified the need for a **Centralized Dashboard** vs. scattered WhatsApp groups.
+    *   Determined key functional requirements: Chat capability, Admin control, User Reviews.
+    *   Assessed technical feasibility of using Node.js and MongoDB.
+*   **Deliverables:** Project Charter, Use Case Definitions.
 
-## 3. Phase 3: Implementation (Coding)
-**Goal**: Translate design into working code.
--   **Activities**:
-    -   **Backend**: Setup Express server, connected MongoDB, built API routes.
-    -   **Frontend**: Developed HTML structure, styled with CSS/Glassmorphism, implemented JS logic.
-    -   **Integrations**: Added WhatsApp link generator and Telegram bot polling.
--   **Outcome**: Source Code (GitHub Repo).
+## Phase 2: System Design
+**Objective:** To create the architectural blueprint.
+*   **Inputs:** Requirement Specification.
+*   **Activities:**
+    *   **Database Design:** Created Entity Relationship Diagrams (ERD) for Users and Events.
+    *   **UI/UX Design:** Drafted wireframes for the "Glassmorphic" dashboard layout.
+    *   **API Specification:** Defined JSON contracts for frontend-backend communication.
+*   **Deliverables:** System Design Specification (SDS), Database Schema.
 
-## 4. Phase 4: Testing
-**Goal**: Ensure system reliability and bug-free operation.
--   **Activities**:
-    -   **Unit Testing**: Tested individual API endpoints (Postman).
-    -   **Integration Testing**: Verified Frontend-Backend communication (Login flow, Fetch events).
-    -   **User Acceptance Testing (UAT)**: Verified features like "Add to Calendar" and "WhatsApp Register".
--   **Outcome**: Test Plan and Bug Fixes (e.g., Fixed Telegram 409 Conflict).
+## Phase 3: Development (Implementation)
+**Objective:** To write the actual code and build the system.
+*   **Duration:** 2 Weeks (Sprints).
+*   **Key Activities:**
+    *   **Sprint 1 (Backend Core)**: Setup Express.js server, MongoDB connection, and Auth logic.
+    *   **Sprint 2 (Frontend MVP)**: Built HTML5 structure and CSS3 styling.
+    *   **Sprint 3 (Integrations)**: Implemented Telegram Polling and WhatsApp deep-linking.
+    *   **Sprint 4 (Refinement)**: Added "Rich Event Cards" and "Past Event Reviews".
+*   **Tools Used:** VS Code, Git, Postman, Node.js.
+*   **Deliverables:** Source Code, GitHub Repository.
 
-## 5. Phase 5: Deployment
-**Goal**: Make the system accessible.
--   **Activities**:
-    -   Configured project for production (Relative paths).
-    -   Created Deployment Guide (`DEPLOYMENT.md`).
-    -   Prepared for hosting on Render.com.
--   **Outcome**: Live URL (Pending hosting).
+## Phase 4: Testing & Quality Assurance
+**Objective:** To validate functionality and eliminate defects.
+*   **Testing Types Performed:**
+    *   **Unit Testing**: Verified individual functions (e.g., `extractEvent()` regex logic).
+    *   **Integration Testing**: Ensured React-less frontend correctly fetches JSON from Node API.
+    *   **System Testing**: Verified the End-to-End flow (Register -> Login -> Add Event -> View Event).
+    *   **Regression Testing**: Ensured new features (Reviews) didn't break existing ones (Add Event).
+*   **Defect Log:**
+    *   *Issue*: Telegram Webhook Conflict (409 Error). *Resolution*: Added auto-delete webhook on startup.
+*   **Deliverables:** Test Cases, Bug Reports.
 
-## 6. Phase 6: Maintenance
-**Goal**: Keep system running and improve.
--   **Activities**:
-    -   Monitor logs for errors.
-    -   Plan future features: AI Recommendations, Mobile App.
+## Phase 5: Deployment
+**Objective:** To release the system to the production environment.
+*   **Environment:** Cloud Hosting (Render.com).
+*   **Activities:**
+    *   Environment Variable Configuration (`MONGODB_URI`, `PORT`).
+    *   Code Optimization (Removing hardcoded `localhost` URLs).
+    *   Database Migration (Seeding initial "Campus Vybes" data).
+*   **Deliverables:** Deployment Guide, Live URL.
+
+## Phase 6: Maintenance & Future Scaling
+**Objective:** To ensure long-term sustainability.
+*   **Current Maintenance**: Log monitoring via Render Dashboard.
+*   **Future Enhancements**:
+    *   **v2.0**: Native mobile application (React Native).
+    *   **v2.1**: AI-powered Event Recommendations based on user history.
+    *   **v2.2**: QR Code generation for event ticketing ticket verification.

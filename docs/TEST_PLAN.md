@@ -1,52 +1,84 @@
-# Test Plan: Campus Event Assistant
+# Master Test Plan
+
+**Project:** Campus Event Assistant
+**Version:** 1.5
+**Testing Lead:** QA Team
+**Date:** December 11, 2025
 
 ---
 
 ## 1. Introduction
-This document outlines the testing strategy to ensure the Campus Event Chatbot meets all functional requirements.
+This Master Test Plan (MTP) outlines the strategy, scope, resources, and schedule for testing the Campus Event Assistant. The primary goal is to ensure the application is robust, secure, and user-friendly before final delivery.
 
 ## 2. Test Scope
--   **In Scope**: User Authentication, Event CRUD Operations, Chatbot Response Logic, Integrations (WhatsApp link, Calendar link).
--   **Out of Scope**: Performance load testing (10,000+ users), Payment gateway integration.
 
-## 3. Test Environment
--   **OS**: Windows 10/11
--   **Browser**: Chrome (Latest), Edge
--   **Backend**: Node.js v14+
--   **Database**: MongoDB Atlas / Local
+### 2.1 Features In-Scope
+1.  **User Authentication Module**: Login, Registration, Session Management.
+2.  **Event Management Module**: Viewing, Creating (Admin), and Deleting events.
+3.  **Conversational Agent**: Command parsing ("Add event", "Show events") and Natural Language Processing.
+4.  **Integration Points**: External links to WhatsApp and Google Calendar.
+5.  **Data Integrity**: Review submission and persistence.
 
-## 4. Test Cases
+### 2.2 Features Out-of-Scope
+1.  Payment Gateway Verification (Not implemented).
+2.  Load Testing > 500 concurrent users.
 
-### 4.1 Authentication
-| ID | Test Case | Steps | Expected Result | Status |
-|----|-----------|-------|-----------------|--------|
-| T1 | Register User | Enter valid username/pass, click Register | "Registration Successful", redirect to Login | ✅ Pass |
-| T2 | Login User | Enter valid creds, click Login | Redirect to Dashboard, store Session | ✅ Pass |
-| T3 | Invalid Login | Enter wrong password | Show "Invalid Credentials" alert | ✅ Pass |
-| T4 | Logout | Click Logout button | Clear Session, Redirect to Login | ✅ Pass |
+## 3. Test Environment & Tools
+*   **Hardware**: Standard PC (Windows 10/11, 8GB RAM).
+*   **Software**: Google Chrome (v120+), Firefox (v115+).
+*   **Test Data**: MongoDB "Seeded" data (mock events covering Past/Future dates).
+*   **Tools**:
+    *   **Manual Testing**: Browser interaction.
+    *   **API Testing**: Postman / cURL.
+    *   **Debugging**: Chrome DevTools Console.
 
-### 4.2 Dashboard & Events
-| ID | Test Case | Steps | Expected Result | Status |
-|----|-----------|-------|-----------------|--------|
-| T5 | View Events | Click "Live Events" tab | List of cards with images display | ✅ Pass |
-| T6 | WhatsApp Link | Click "Register" on event | Opens WhatsApp with pre-filled text | ✅ Pass |
-| T7 | Calendar Link | Click "Add" (Green button) | Opens Google Calendar with event details | ✅ Pass |
-| T8 | Past Events | Click "Past Events" tab | Shows expired events, "Review" button | ✅ Pass |
+## 4. Test Strategy
 
-### 4.3 Chatbot
-| ID | Test Case | Steps | Expected Result | Status |
-|----|-----------|-------|-----------------|--------|
-| T9 | Greeting | Type "Hi" | Bot replies "Hello there!..." | ✅ Pass |
-| T10| Show Events | Type "Show events" | Bot lists upcoming events textually | ✅ Pass |
-| T11| Unknown Cmd | Type "Random text" | Bot offers help menu | ✅ Pass |
+### 4.1 Unit Testing
+*   **Objective**: Validate smallest testable parts.
+*   **Focus**: Regex command parsers, Date formatting utility functions.
 
-### 4.4 Admin Functions
-| ID | Test Case | Steps | Expected Result | Status |
-|----|-----------|-------|-----------------|--------|
-| T12| Admin Access | Login as Admin (`isAdmin: true`) | "Admin" tab is visible | ✅ Pass |
-| T13| Delete Event | Click Delete in Admin tab | Event removed from DB and Lists | ✅ Pass |
+### 4.2 Integration Testing
+*   **Objective**: Verify data flow between Client and Server.
+*   **Focus**: JSON response structure, HTTP Status Codes (200 vs 400 vs 500).
 
-## 5. Defect Report (Resolved)
--   **Bug**: Telegram 409 Conflict. **Fix**: Implemented Webhook Deletion before Polling.
--   **Bug**: WhatsApp Link Invalid. **Fix**: Updated number to +254... format.
--   **Bug**: Images missing. **Fix**: Seeded DB with Unsplash URLs.
+### 4.3 User Acceptance Testing (UAT)
+*   **Objective**: Validate system against user needs.
+*   **Focus**: Usability, visual alignment, "Glassmorphism" rendering.
+
+## 5. Detailed Test Cases
+
+### 5.1 Module: Authentication
+| Case ID | Scenario | Pre-Conditions | Test Steps | Expected Result | Result |
+|:---|:---|:---|:---|:---|:---|
+| **AUTH-01** | Successful Registration | Database allows new users | 1. Navigate to Login<br>2. Toggle "Register"<br>3. Enter unique User/Pass<br>4. Submit | Alert "Success", prompt to Login | **PASS** |
+| **AUTH-02** | Duplicate User Handling | User "Admin" exists | 1. Register with username "Admin" | Warning "User already exists" | **PASS** |
+| **AUTH-03** | Admin Privilege Check | Logged in as Admin | 1. Check Sidebar | "Admin Panel" tab is visible | **PASS** |
+
+### 5.2 Module: Event Dashboard
+| Case ID | Scenario | Pre-Conditions | Test Steps | Expected Result | Result |
+|:---|:---|:---|:---|:---|:---|
+| **DASH-01** | Live Event Rendering | DB has future events | 1. Click "Live Events" | Cards displayed with "Register" btn | **PASS** |
+| **DASH-02** | Past Event Rendering | DB has past events | 1. Click "Past Events" | Cards displayed with "Review" btn | **PASS** |
+| **DASH-03** | Image Fallback | Event has broken img URL | 1. Load Event Card | Default placeholder image loads | **PASS** |
+
+### 5.3 Module: Integrations
+| Case ID | Scenario | Pre-Conditions | Test Steps | Expected Result | Result |
+|:---|:---|:---|:---|:---|:---|
+| **INT-01** | WhatsApp Deep Link | None | 1. Click "Register" | Opens `wa.me` with pre-filled text | **PASS** |
+| **INT-02** | Google Calendar Link | None | 1. Click "Add" (Green Icon) | Opens Calendar with Title/Date/Loc | **PASS** |
+
+## 6. Bug Management
+### 6.1 Severity Definitions
+*   **Critical**: System crash or data loss.
+*   **High**: Major feature failure (e.g., Login doesn't work).
+*   **Medium**: UI/UX issues, minor logic errors.
+*   **Low**: Typographical errors, color mismatches.
+
+### 6.2 Resolved Defects
+*   **[HIGH] Telegram 409 Conflict**: Fixed by implementing `deleteWebhook` before polling.
+*   **[MED] Invalid Phone Error**: Fixed by updating `server.js` config.
+
+## 7. Approval
+*   **Approved By**: Project Manager
+*   **Date**: 11/12/2025
