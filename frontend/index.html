@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Event Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for premium feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🎓 EventBot</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li class="nav-item active" data-tab="dashboard">
+                        <span class="icon">💬</span> Chat Assistant
+                    </li>
+                    <li class="nav-item" data-tab="live-events">
+                        <span class="icon">📅</span> Live Events
+                    </li>
+                    <li class="nav-item" data-tab="past-events">
+                        <span class="icon">📂</span> Past Events
+                    </li>
+                    <li class="nav-item" data-tab="plugins">
+                        <span class="icon">🔌</span> Integrations
+                    </li>
+                    <li class="nav-item" data-tab="guide">
+                        <span class="icon">ℹ️</span> Quick Guide
+                    </li>
+                    <li class="nav-item" data-tab="login" id="nav-login">
+                        <span class="icon">🔑</span> Login
+                    </li>
+                    <li class="nav-item" data-tab="admin" id="nav-admin" style="display: none;">
+                        <span class="icon">🛠️</span> Admin
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p>© 2025 CampusBot</p>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- HEADER -->
+            <header class="top-header">
+                <h1>Dashboard</h1>
+                <div class="user-profile">
+                    <span>Admin User</span>
+                    <div class="avatar">A</div>
+                </div>
+            </header>
+
+            <!-- VIEWS -->
+            <div class="content-area">
+
+                <!-- 1. CHAT DASHBOARD (Default) -->
+                <div id="dashboard-view" class="view-section active">
+                    <div class="chat-wrapper">
+                        <div id="chat-box" class="chat-box">
+                            <!-- Helper start message -->
+                            <div class="message bot-msg">
+                                Hello! I'm your event assistant. Check the tabs or ask me anything!
+                            </div>
+                        </div>
+
+                        <!-- Suggestions Area -->
+                        <div id="suggestions"></div>
+
+                        <div class="chat-input-area">
+                            <input type="text" id="user-input" placeholder="Type your message here...">
+                            <button id="send-btn">➤</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. LIVE EVENTS -->
+                <div id="live-events-view" class="view-section">
+                    <h2>🎉 Upcoming Events</h2>
+                    <div class="events-grid" id="live-events-list">
+                        <!-- Events injected via JS -->
+                        <div class="loading">Loading events...</div>
+                    </div>
+                </div>
+
+                <!-- 3. PAST EVENTS (Finished Tasks) -->
+                <div id="past-events-view" class="view-section">
+                    <h2>📂 Past Events & Tasks</h2>
+                    <div class="events-list" id="past-events-list">
+                        <p>No past events recorded yet.</p>
+                    </div>
+                </div>
+
+                <!-- 4. PLUGINS (Integrations) -->
+                <div id="plugins-view" class="view-section">
+                    <h2>🔌 Connect Apps</h2>
+                    <div class="plugins-grid">
+                        <div class="plugin-card whatsapp">
+                            <div class="icon">📱</div>
+                            <h3>WhatsApp</h3>
+                            <p>Get event updates on WhatsApp.</p>
+                            <button onclick="connectWhatsApp()">Connect WhatsApp 📱</button>
+                        </div>
+                        <div class="plugin-card telegram">
+                            <div class="icon">✈️</div>
+                            <h3>Telegram</h3>
+                            <p class="bot-handle">@EVENT254_BOT</p>
+                            <p>Manage events via Telegram bot.</p>
+                            <button onclick="connectTelegram()">Connect Telegram ✈️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. QUICK GUIDE -->
+                <div id="guide-view" class="view-section">
+                    <h2>📘 Quick Guide</h2>
+                    <div class="guide-content">
+                        <h3>Commands</h3>
+                        <ul>
+                            <li><strong>"Show events"</strong> - List upcoming events</li>
+                            <li><strong>"Add event: [Title] on [Date] at [Time]"</strong> - Save a new event</li>
+                            <li><strong>"Delete event [Number]"</strong> - Remove an event</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 6. LOGIN VIEW -->
+                <div id="login-view" class="view-section">
+                    <h2>🔑 Login / Register</h2>
+                    <div class="auth-container">
+                        <div class="auth-box">
+                            <h3 id="auth-title">Login</h3>
+                            <input type="text" id="auth-username" placeholder="Username">
+                            <input type="password" id="auth-password" placeholder="Password">
+                            <button id="auth-btn">Login</button>
+                            <p class="forgot-link" id="forgot-password-link">Forgot Password?</p>
+                            <p id="auth-switch">Don't have an account? <span>Register</span></p>
+                        </div>
+
+                        <!-- Forgot Password Form (Hidden by default) -->
+                        <div class="auth-box" id="forgot-box" style="display: none;">
+                            <h3>Reset Password</h3>
+                            <p style="margin-bottom: 15px;">Enter your username to receive a reset link.</p>
+                            <input type="text" id="forgot-username" placeholder="Enter Username">
+                            <button id="forgot-btn">Send Reset Link</button>
+                            <p id="back-to-login" style="margin-top: 15px; cursor: pointer; color: #6366f1;">&larr; Back
+                                to Login</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. ADMIN VIEW -->
+                <div id="admin-view" class="view-section">
+                    <h2>🛠️ Admin Dashboard</h2>
+                    <div class="admin-controls">
+                        <button onclick="document.getElementById('add-event-modal').style.display='block'"
+                            class="primary-btn">+ Add New Event</button>
+                    </div>
+                    <div class="events-list" id="admin-events-list">
+                        <!-- Admin list injected here -->
+                        <p>Loading events...</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- FLOATING VOICE BTN -->
+    <div id="voice-overlay" class="voice-btn-container">
+        <!-- Injected via JS or CSS -->
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
