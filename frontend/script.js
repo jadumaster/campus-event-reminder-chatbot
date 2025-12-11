@@ -12,6 +12,7 @@ const authPasswordInput = document.getElementById("auth-password");
 const authBtn = document.getElementById("auth-btn");
 const authSwitch = document.getElementById("auth-switch");
 const authTitle = document.getElementById("auth-title");
+const navLogin = document.getElementById("nav-login");
 const navAdmin = document.getElementById("nav-admin");
 
 // Forgot Password Elements
