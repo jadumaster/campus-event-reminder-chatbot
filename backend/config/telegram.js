@@ -192,11 +192,77 @@ const setTelegramWebhook = async (webhookUrl) => {
     }
 };
 
+/**
+ * Delete Telegram webhook
+ */
+const deleteTelegramWebhook = async () => {
+    try {
+        await axios.post(`${TELEGRAM_API_URL}/deleteWebhook`);
+        console.log("✅ Telegram webhook deleted (switching to polling).");
+    } catch (error) {
+        console.error(`⚠️ Warning: Could not delete webhook: ${error.message}`);
+    }
+};
+
+/**
+ * Start Telegram Polling (For Local Development)
+ */
+const startTelegramPolling = async () => {
+    // Delete any existing webhook first to avoid 409 Conflict
+    await deleteTelegramWebhook();
+
+    let offset = 0;
+    console.log("🔄 Starting Telegram Bot in Polling Mode (Local)...");
+
+    const poll = async () => {
+        try {
+            const response = await axios.get(`${TELEGRAM_API_URL}/getUpdates`, {
+                params: {
+                    offset: offset,
+                    timeout: 30
+                }
+            });
+
+            const updates = response.data.result;
+
+            if (updates.length > 0) {
+                for (const update of updates) {
+                    offset = update.update_id + 1;
+
+                    if (update.message) {
+                        const chatId = update.message.chat.id;
+                        const messageText = update.message.text;
+                        const userId = update.message.from.id;
+                        console.log(`💬 Polling Message from ${userId}: ${messageText}`);
+                        await processTelegramMessage(chatId, messageText, userId);
+                    } else if (update.callback_query) {
+                        const chatId = update.callback_query.message.chat.id;
+                        const data = update.callback_query.data;
+                        console.log(`🔘 Polling Button: ${data}`);
+                        await processTelegramCallback(chatId, data);
+                    }
+                }
+            }
+        } catch (error) {
+            if (error.code !== "ECONNABORTED") { // Ignore timeout errors
+                console.error("❌ Polling Error:", error.message);
+            }
+        }
+
+        // Poll again immediately
+        setTimeout(poll, 1000);
+    };
+
+    poll();
+};
+
 module.exports = {
     sendTelegramMessage,
     sendTelegramMessageWithButtons,
     handleTelegramWebhook,
     processTelegramMessage,
     processTelegramCallback,
-    setTelegramWebhook
+    setTelegramWebhook,
+    deleteTelegramWebhook,
+    startTelegramPolling
 };

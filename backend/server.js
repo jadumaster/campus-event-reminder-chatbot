@@ -7,7 +7,7 @@ require("dotenv").config();
 const connectDB = require("./config/database");
 const Event = require("./models/Event");
 const { handleWhatsAppWebhook, verifyWhatsAppToken } = require("./config/whatsapp");
-const { handleTelegramWebhook, setTelegramWebhook } = require("./config/telegram");
+const { handleTelegramWebhook, setTelegramWebhook, startTelegramPolling } = require("./config/telegram");
 const { scheduleEventReminder, cancelEventReminder } = require("./config/reminders");
 const User = require("./models/User");
 const crypto = require("crypto");
@@ -30,13 +30,22 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 
 // Set Telegram webhook when server starts
 const setupTelegramWebhook = async () => {
-    const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL;
+    // FORCE POLLING: If the webhook config is an ngrok link (likely broken/expired), ignore it!
+    const webhookUrl = (process.env.TELEGRAM_WEBHOOK_URL || "").includes("ngrok")
+        ? null
+        : process.env.TELEGRAM_WEBHOOK_URL;
+
     if (webhookUrl) {
         try {
             await setTelegramWebhook(webhookUrl);
         } catch (error) {
             console.error("Failed to set Telegram webhook:", error.message);
+            // If webhook fails, try polling?
+            // startTelegramPolling(); // Optional: enable if you want double-safety
         }
+    } else {
+        // Fallback to Polling for Local Dev
+        startTelegramPolling();
     }
 };
 
@@ -172,7 +181,9 @@ app.post("/api/events", async (req, res) => {
             description: description || "",
             location: location || "Campus",
             category: category || "Other",
-            attendees: attendees || 0
+            attendees: attendees || 0,
+            image: req.body.image || "https://source.unsplash.com/random/800x600/?event",
+            registrationLink: req.body.registrationLink || ""
         });
 
         res.status(201).json({ success: true, message: "Event added!", event: newEvent });
@@ -232,6 +243,8 @@ app.put("/api/events/:id", async (req, res) => {
                 location,
                 category,
                 attendees,
+                image: req.body.image,
+                registrationLink: req.body.registrationLink,
                 updatedAt: Date.now()
             },
             { new: true, runValidators: true }
@@ -247,6 +260,25 @@ app.put("/api/events/:id", async (req, res) => {
         res.json({ success: true, message: "Event updated!", event });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
+    }
+});
+
+// Add Review to Event
+app.post("/api/events/:id/reviews", async (req, res) => {
+    try {
+        const { user, comment } = req.body;
+        const event = await Event.findById(req.params.id);
+
+        if (!event) {
+            return res.status(404).json({ success: false, message: "Event not found" });
+        }
+
+        event.reviews.push({ user, comment });
+        await event.save();
+
+        res.json({ success: true, message: "Review added!", reviews: event.reviews });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -381,7 +413,7 @@ app.get("/api/config", (req, res) => {
     res.json({
         success: true,
         telegramLink: process.env.TELEGRAM_BOT_LINK || "https://t.me/EVENT254_BOT",
-        whatsappLink: process.env.WHATSAPP_BOT_LINK || "https://wa.me/1234567890"
+        whatsappLink: process.env.WHATSAPP_BOT_LINK || "https://wa.me/254718982047"
     });
 });
 

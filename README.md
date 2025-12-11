@@ -38,6 +38,28 @@ campus event chatbot/
 └── README.md              # Project Documentation
 ```
 
+## System Architecture
+
+```mermaid
+graph TD
+    User[👤 User] -->|Interacts| UI[🖥️ Frontend Dashboard]
+    UI -->|HTTP Requests| API[⚙️ Backend API (Express)]
+    
+    subgraph Frontend
+        UI -- Chats --> ChatBot[💬 Chat Interface]
+        UI -- Views Files --> Views[📅 Events & Admin]
+    end
+
+    subgraph Backend
+        API -->|Auth| Auth[🔐 Authentication]
+        API -->|CRUD| DB[(🗄️ MongoDB)]
+        API -->|Webhooks| Bots[🤖 Bot Integrations]
+    end
+
+    Bots -->|Updates| TG[✈️ Telegram]
+    Bots -->|Updates| WA[📱 WhatsApp]
+```
+
 ## Installation & Setup
 
 1. **Install Dependencies**:

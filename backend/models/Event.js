@@ -36,6 +36,19 @@ const eventSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    image: {
+        type: String,
+        default: "https://via.placeholder.com/400x200"
+    },
+    registrationLink: {
+        type: String,
+        default: ""
+    },
+    reviews: [{
+        user: String,
+        comment: String,
+        date: { type: Date, default: Date.now }
+    }],
     createdAt: {
         type: Date,
         default: Date.now

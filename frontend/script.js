@@ -33,8 +33,10 @@ let isRegistering = false;
 // CONFIGURATION
 // ----------------------
 // ----------------------
+// ----------------------
+// ----------------------
 let TELEGRAM_BOT_LINK = "https://t.me/EVENT254_BOT"; // Default fallback
-let WHATSAPP_BOT_LINK = "https://wa.me/1234567890"; // Default fallback
+let WHATSAPP_BOT_LINK = "https://wa.me/254718982047"; // Default fallback
 
 // Fetch config from backend
 fetch("http://localhost:5000/api/config")
@@ -50,7 +52,7 @@ fetch("http://localhost:5000/api/config")
         console.error("Error loading config:", err);
         // Fallback defaults
         TELEGRAM_BOT_LINK = "https://t.me/EVENT254_BOT";
-        WHATSAPP_BOT_LINK = "https://wa.me/1234567890";
+        WHATSAPP_BOT_LINK = "https://wa.me/254718982047";
     });
 
 // ----------------------
@@ -256,33 +258,150 @@ function getEvents() {
 
 async function loadLiveEvents() {
     const list = document.getElementById("live-events-list");
-    list.innerHTML = '<div class="loading">Loading...</div>';
+    list.innerHTML = '<div class="loading">Loading Campus Vybes...</div>';
 
     const events = await getEvents();
     list.innerHTML = "";
 
-    if (events.length === 0) {
+    // FILTER UPCOMING ONLY
+    const upcomingEvents = events.filter(ev => new Date(ev.date) >= new Date());
+
+    if (upcomingEvents.length === 0) {
         list.innerHTML = "<p>No upcoming events found.</p>";
         return;
     }
 
-    events.forEach(ev => {
+    upcomingEvents.forEach(ev => {
+        // Safe defaults
+        const image = ev.image || "https://source.unsplash.com/random/800x600/?event";
+        const location = ev.location || "Campus";
+
+        // WhatsApp Register Link
+        // Format: https://wa.me/PHONE?text=I%20want%20to%20register...
+        // Extract phone number from stored link or use default
+        let waLink = WHATSAPP_BOT_LINK;
+        if (!waLink || waLink === "#") waLink = "https://wa.me/254718982047";
+
+        // Clean phone number for direct link construction if needed, 
+        // but let's assume WHATSAPP_BOT_LINK is a base "https://wa.me/123..."
+        const msg = encodeURIComponent(`Hi! I'd like to register for the event: ${ev.title} on ${ev.date}.`);
+        const finalRegisterLink = `${waLink}?text=${msg}`;
+
+        // Google Calendar Link
+        // Format: https://calendar.google.com/calendar/render?action=TEMPLATE&text=...
+        // We'd ideally parse ev.date and ev.time into ISO format. 
+        // For now, let's pass them as raw text strings which GCal tries to parse.
+        const gcalLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(ev.title)}&details=${encodeURIComponent(ev.description || "Campus Event")}&location=${encodeURIComponent(location)}`;
+
         const card = document.createElement("div");
         card.className = "event-card";
         card.innerHTML = `
-            <h3>${ev.title}</h3>
-            <p>📅 ${ev.date}</p>
-            <p>⏰ ${ev.time}</p>
-            <p>📍 ${ev.location}</p>
+            <img src="${image}" alt="${ev.title}" class="event-image" onerror="this.src='https://via.placeholder.com/400x200'">
+            <div class="event-content">
+                <h3>${ev.title}</h3>
+                <div class="event-meta">
+                    <span>📅 ${ev.date}</span>
+                    <span>⏰ ${ev.time}</span>
+                    <span>📍 ${location}</span>
+                </div>
+                
+                <div class="event-actions">
+                    <a href="${finalRegisterLink}" target="_blank" class="register-btn">
+                        📝 Register
+                    </a>
+                    <a href="${gcalLink}" target="_blank" class="calendar-btn" title="Add to Google Calendar">
+                        📅 Add
+                    </a>
+                </div>
+            </div>
         `;
         list.appendChild(card);
     });
 }
 
-function loadPastEvents() {
-    // For now, just a placeholder or could filter by date if logic existed
+async function loadPastEvents() {
     const list = document.getElementById("past-events-list");
-    list.innerHTML = "<p><i>Past events archive is currently empty.</i></p>";
+    list.innerHTML = '<div class="loading">Loading Past Vybes...</div>';
+
+    const events = await getEvents();
+    list.innerHTML = "";
+
+    // FILTER PAST ONLY
+    // *Note: Date string parsing can be tricky ("25 Dec 2025"). 
+    // Ideally use ISO dates in DB, but for now we assume JS can parse these strings.
+    const pastEvents = events.filter(ev => new Date(ev.date) < new Date());
+
+    if (pastEvents.length === 0) {
+        list.innerHTML = "<p>No past events found.</p>";
+        return;
+    }
+
+    pastEvents.forEach(ev => {
+        const image = ev.image || "https://source.unsplash.com/random/800x600/?event";
+
+        // Reviews HTML
+        let reviewsHtml = "";
+        if (ev.reviews && ev.reviews.length > 0) {
+            reviewsHtml = `<div class="reviews-preview">
+                <strong>Reviews:</strong><br>
+                ${ev.reviews.map(r => `<i>"${r.comment}" - ${r.user}</i>`).join("<br>")}
+            </div>`;
+        } else {
+            reviewsHtml = `<div class="reviews-preview"><i>No reviews yet. Be the first!</i></div>`;
+        }
+
+        const card = document.createElement("div");
+        card.className = "event-card";
+        card.style.opacity = "0.9"; // Slightly faded for past
+
+        card.innerHTML = `
+            <img src="${image}" alt="${ev.title}" class="event-image" style="filter: grayscale(40%);">
+            <div class="event-content">
+                <h3>${ev.title} (Ended)</h3>
+                <div class="event-meta">
+                    <span>📅 ${ev.date}</span>
+                    <span>📍 ${ev.location}</span>
+                </div>
+                ${reviewsHtml}
+                <div class="event-actions">
+                    <button class="register-btn" onclick="addReview('${ev._id}')" style="background: var(--secondary-color);">
+                        ⭐ Write Review
+                    </button>
+                </div>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+async function addReview(eventId) {
+    if (!currentUser) {
+        alert("Please Login to leave a review!");
+        authSwitch.click(); // Open login
+        return;
+    }
+
+    const comment = prompt("How was the event? (Write your review):");
+    if (!comment) return;
+
+    try {
+        const res = await fetch(`http://localhost:5000/api/events/${eventId}/reviews`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user: currentUser.username, comment })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Review saved! Thanks for your feedback.");
+            loadPastEvents(); // Refresh
+        } else {
+            alert("Error saving review.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error connecting to server.");
+    }
 }
 // ----------------------
 // AUTHENTICATION LOGIC
