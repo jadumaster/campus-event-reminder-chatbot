@@ -39,7 +39,7 @@ let TELEGRAM_BOT_LINK = "https://t.me/EVENT254_BOT"; // Default fallback
 let WHATSAPP_BOT_LINK = "https://wa.me/254718982047"; // Default fallback
 
 // Fetch config from backend
-fetch("http://localhost:5000/api/config")
+fetch("/api/config")
     .then(res => res.json())
     .then(data => {
         if (data.success) {

@@ -22,7 +22,7 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(express.static(path.join(__dirname, "public")));
 
 // ----------------------
 // WEBHOOK SETUP
@@ -419,7 +419,7 @@ app.get("/api/config", (req, res) => {
 
 // Serve frontend
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/index.html"));
+    res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 // Error handling middleware
